@@ -1,0 +1,21 @@
+.HomePage {
+  display: flex;
+  transition: margin-left 0.3s ease; /* Плавный переход */
+}
+
+.HomePage.menu-open {
+  margin-left: 250px; /* Ширина меню */
+}
+
+.crypto-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+  padding: 20px;
+}
+
+.crypto-list a {
+  text-decoration: none;
+  color: inherit;
+}

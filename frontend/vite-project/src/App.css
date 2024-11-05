@@ -1,0 +1,81 @@
+/* App.css */
+
+/* Стандартный вид */
+.App.menu-visible .content {
+  margin-left: 256px;
+}
+
+.menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 256px;
+  height: 100vh;
+  background-color: #fff;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+  transition: transform 0.3s ease;
+  transform: translateX(0);
+}
+
+.App.menu-hidden .menu {
+  transform: translateX(-100%);
+}
+
+.header {
+  position: fixed;
+  top: 0;
+  left: 256px;
+  right: 0;
+  height: 60px;
+  background-color: #333;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  z-index: 10;
+  transition: left 0.3s ease;
+}
+
+.header-full {
+  left: 0;
+}
+
+.menu-toggle-button {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+  margin-right: 20px;
+}
+
+.footer {
+  position: fixed;
+  bottom: 0;
+  left: 256px;
+  right: 0;
+  height: 60px;
+  background-color: #333;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 20px;
+  z-index: 10;
+  transition: left 0.3s ease;
+}
+
+.App.menu-hidden .footer {
+  left: 0;
+}
+/* App.css */
+
+.content {
+  padding-top: 60px; /* Для отступа под хедер */
+  transition: margin-left 0.3s ease;
+}
+/* 
+.App.menu-visible .content {
+  margin-left: 256px;
+} */
