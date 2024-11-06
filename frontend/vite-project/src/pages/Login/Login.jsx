@@ -1,45 +1,34 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import './Login.css';
 
 const Login = ({ onLogin }) => {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     try {
-      const response = await fetch('http://127.0.0.1:8000/login/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, password }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        onLogin(username, data.access);
-        navigate('/');
-      } else {
-        console.error('Login failed');
-      }
+      const response = await axios.post('http://localhost:5000/api/auth/login', { email, password });
+      const { token } = response.data;
+      onLogin(email, token);
+      navigate('/');
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Login failed:', error);
+      alert('Login failed. Please check your credentials.');
     }
   };
 
   return (
-    <div className="login-container">
+    <div>
       <h2>Login</h2>
       <form onSubmit={handleSubmit}>
         <input
-          type="text"
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           required
         />
         <input

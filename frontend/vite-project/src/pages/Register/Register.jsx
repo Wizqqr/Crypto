@@ -1,59 +1,60 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import './Register.css';
-import axios from 'axios';
 
 const Register = () => {
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [avatar, setAvatar] = useState(null);
+  const [formData, setFormData] = useState({
+    fullName: '',
+    email: '',
+    password: '',
+    avatarUrl: '',
+  });
+  const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRcQg-lr5__zRqY3mRg6erzAD9n4BGp3G8VfA&s');
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
   const navigate = useNavigate();
+
+  const handleInputChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
   const previewImage = (event) => {
     const file = event.target.files[0];
-    setAvatar(file);
-    setAvatarPreview(URL.createObjectURL(file));
+    if (file) {
+      setAvatarFile(file);
+      setAvatarPreview(URL.createObjectURL(file));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
   
-    const formData = new FormData();
-    formData.append('username', username);
-    formData.append('email', email);
-    formData.append('password', password);
-    formData.append('avatar', avatar);
-  
     try {
-      const response = await axios.post('http://127.0.0.1:8000/register/', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-  
-      if (response.status === 201) { 
-        setMessage('Регистрация прошла успешно! Пожалуйста, проверьте свою почту для подтверждения аккаунта.');
-        setError('');
+      // If there's an avatar file, upload it first and get the URL
+      if (avatarFile) {
+        const uploadFormData = new FormData();
+        uploadFormData.append('image', avatarFile);
         
-        // Assuming the API sends back the confirmation code
-        const confirmationCode = response.data.confirmation_code; 
-        navigate(`/confirm?code=${confirmationCode}`); // Navigate to confirm page with code
-      } else {
-        setError('Ошибка при регистрации');
+        const response = await axios.post('http://localhost:5000/upload', uploadFormData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        
+        // Set the avatar URL in the form data
+        formData.avatarUrl = response.data.url;
       }
+  
+      // Now submit the registration data, including the avatar URL if available
+      await axios.post('http://localhost:5000/api/auth/register', formData);
+      alert('Registration successful! Please check your email for the confirmation code.');
+      navigate('/confirm');
     } catch (error) {
-      setError('Ошибка: ' + (error.response?.data?.message || error.message));
+      console.error('Error registering user:', error);
+      alert('Registration failed. Please try again.');
     }
   };
-  
   return (
-    <div className="register-container">
-      {message && <p className="success-message">{message}</p>}
-      {error && <p className="error-message">{error}</p>}
+    <div>
+      <h2>Register</h2>
       <form onSubmit={handleSubmit}>
         <div className="avatar-container">
           <img
@@ -72,23 +73,23 @@ const Register = () => {
         </div>
         <input
           type="text"
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          name="fullName"
+          placeholder="Full Name"
+          onChange={handleInputChange}
           required
         />
         <input
           type="email"
+          name="email"
           placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={handleInputChange}
           required
         />
         <input
           type="password"
+          name="password"
           placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={handleInputChange}
           required
         />
         <button type="submit">Register</button>

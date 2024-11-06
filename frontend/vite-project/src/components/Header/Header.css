@@ -1,13 +1,77 @@
 .header {
-    background-color: black;
-    color: white;
-    display: flex;
-    justify-content: space-between;
-    padding: 1rem;
-  }
-  
-  .auth-buttons {
-    display: flex;
-    gap: 1rem;
-  }
-  
+  background-color: #111; /* Dark background */
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 2rem;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  transition: background-color 0.3s;
+}
+
+.header:hover {
+  background-color: #222; /* Slight color change on hover */
+}
+
+.menu-toggle-button {
+  background-color: transparent;
+  color: #fff;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+.menu-toggle-button:hover {
+  color: #bbb;
+}
+
+.auth-buttons {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.auth-buttons span {
+  font-weight: bold;
+  margin-right: 0.5rem;
+}
+
+.auth-buttons img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.3s;
+  border: 2px solid #444; /* Slight border around avatar */
+}
+
+.auth-buttons img:hover {
+  transform: scale(1.1);
+  border-color: #777; /* Lighter border on hover */
+}
+
+.auth-buttons button,
+.auth-buttons a {
+  background-color: #444;
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  text-decoration: none;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.auth-buttons button:hover,
+.auth-buttons a:hover {
+  background-color: #666;
+  color: #e0e0e0;
+}
+
+.auth-buttons a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

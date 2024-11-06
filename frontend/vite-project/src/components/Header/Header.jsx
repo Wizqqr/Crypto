@@ -1,9 +1,22 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import './Header.css';
+import { fetchAuthMe } from '../../redux/slices/auth.js'
 
 const Header = ({ toggleMenu, isMenuVisible, isAuthenticated, username, handleLogout }) => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const userData = useSelector((state) => state.auth.data);
+  const userAvatar = userData?.avatarUrl ? `http://localhost:5000${userData.avatarUrl}` : '/noavatar.png';
+  const userName = userData?.fullName
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      dispatch(fetchAuthMe());
+    }
+  }, [dispatch, isAuthenticated]);
 
   const onLogout = () => {
     handleLogout();
@@ -19,7 +32,8 @@ const Header = ({ toggleMenu, isMenuVisible, isAuthenticated, username, handleLo
       <div className="auth-buttons">
         {isAuthenticated ? (
           <>
-            <span>Welcome, {username}!</span>
+            <span>Welcome, {userName}!</span>
+            <img src={userAvatar} alt="User Avatar" />
             <button onClick={onLogout}>Logout</button>
           </>
         ) : (

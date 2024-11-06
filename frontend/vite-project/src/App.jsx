@@ -9,12 +9,13 @@ import Login from './pages/Login/Login';
 import Register from './pages/Register/Register';
 import ConfirmEmail from './pages/ConfirmEmail/Confirm';
 import './App.css';
-
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchAuthMe } from './redux/slices/auth';
 const App = () => {
   const [isMenuVisible, setMenuVisible] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [username, setUsername] = useState('');
-
+  const dispatch = useDispatch()
   const toggleMenu = () => {
     setMenuVisible(!isMenuVisible);
   };
@@ -24,8 +25,9 @@ const App = () => {
     if (token) {
       setIsAuthenticated(true);
       setUsername(localStorage.getItem('username'));
+      dispatch(fetchAuthMe()); 
     }
-  }, []);
+  }, [dispatch]);
 
   const handleLogin = (username, token) => {
     localStorage.setItem('accessToken', token);
