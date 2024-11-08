@@ -38,18 +38,13 @@
 }
 
 .auth-buttons img {
-  width: 40px;
-  height: 40px;
+
   border-radius: 50%;
   cursor: pointer;
   transition: transform 0.3s;
   border: 2px solid #444; /* Slight border around avatar */
 }
 
-.auth-buttons img:hover {
-  transform: scale(1.1);
-  border-color: #777; /* Lighter border on hover */
-}
 
 .auth-buttons button,
 .auth-buttons a {

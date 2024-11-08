@@ -54,6 +54,7 @@ input[type="password"] {
   border: 1px solid #ccc;
   border-radius: 5px;
   font-size: 16px;
+  color: black;
 }
 
 input[type="text"]:focus,
@@ -79,4 +80,9 @@ button[type="submit"] {
 
 button[type="submit"]:hover {
   background-color: #0056b3;
+}
+.error-text {
+  color: red;
+  font-size: 0.9em;
+  margin-top: 5px;
 }

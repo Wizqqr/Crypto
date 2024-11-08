@@ -5,17 +5,25 @@ import { useNavigate } from 'react-router-dom';
 const ConfirmEmail = () => {
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
-  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       await axios.post('http://localhost:5000/api/auth/verify', { email, code });
-      alert('Email confirmed successfully! You can now log in.');
-      navigate('/login');
     } catch (error) {
-      console.error('Confirmation failed:', error);
-      alert('Invalid or expired code.');
+      if (error.response && error.response.data) {
+        const backendErrors = error.response.data;
+        const errorMessages = {};
+        if (backendErrors.message.includes('Email')) {
+          errorMessages.email = 'Email already exists';
+        }
+        if(backendErrors.message.includes('Code')) {
+          errorMessages.code = 'Invalid or Expired code'
+        }
+        setErrors(errorMessages);
+      } else {
+        console.error('Error registering user:', error);
+      }
     }
   };
 
@@ -30,6 +38,7 @@ const ConfirmEmail = () => {
           onChange={(e) => setEmail(e.target.value)}
           required
         />
+        {errors.email && <p>{errors.email}</p>}
         <input
           type="text"
           placeholder="Confirmation Code"
@@ -37,6 +46,7 @@ const ConfirmEmail = () => {
           onChange={(e) => setCode(e.target.value)}
           required
         />
+        {errors.code && <p>{errors.code}</p>}
         <button type="submit">Confirm Email</button>
       </form>
     </div>

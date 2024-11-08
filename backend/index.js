@@ -7,9 +7,22 @@ import { errorHandler } from './middleware/errorMiddleware.js';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import multer from 'multer'
+import redis from 'redis';
+import redisClient from './config/redis.js';
+
 dotenv.config();
 
 const app = express();
+
+(async () => {
+    try {
+        await redisClient.connect(); 
+        console.log('Redis client connected');
+    } catch (err) {
+        console.error('Error connecting to Redis:', err);
+    }
+})();
+
 connectDB();
 
 const storage = multer.diskStorage({
@@ -34,7 +47,7 @@ app.post('/upload', upload.single('image'), (req,res)=>{
 
 
 app.use('/api/cryptos', cryptoRoutes);
-app.use('/api/auth', authRoutes); // Use the auth routes
+app.use('/api/auth', authRoutes); 
 
 app.use(errorHandler);
 

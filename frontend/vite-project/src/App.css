@@ -11,12 +11,23 @@
   left: 0;
   width: 256px;
   height: 100vh;
-  background-color: #fff;
+  background-color: #001529;
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
   overflow-y: auto;
   transition: transform 0.3s ease;
   transform: translateX(0);
 }
+
+/* Скрываем полосу прокрутки для Webkit-браузеров (Chrome, Safari) */
+.menu::-webkit-scrollbar {
+  display: none;
+}
+
+/* Поддержка скрытия полосы прокрутки для Firefox */
+.menu {
+  scrollbar-width: none; /* Firefox */
+}
+
 
 .App.menu-hidden .menu {
   transform: translateX(-100%);
@@ -82,3 +93,15 @@
  body{
   display: block;
  }
+
+ @media (max-width:768px){
+  .App.menu-visible .content{
+    margin-left: 0px;
+  }
+  .header{
+    left: 0;
+  }
+  .menu{
+    margin-top: 60px;
+  }
+}

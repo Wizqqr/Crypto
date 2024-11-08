@@ -1,12 +1,19 @@
 .HomePage {
   display: flex;
+  justify-content: center;
+  align-items: center;
   transition: margin-left 0.3s ease; /* Плавный переход */
 }
 
 .HomePage.menu-open {
   margin-left: 250px; /* Ширина меню */
 }
-
+.cryptos{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 100px;
+}
 .crypto-list {
   display: flex;
   flex-wrap: wrap;
@@ -18,4 +25,20 @@
 .crypto-list a {
   text-decoration: none;
   color: inherit;
+}
+
+@media (min-width: 1376px){
+  .grid{
+    max-width: 1402px;
+  }
+}
+
+
+@media (max-width: 768px){
+  .crypto-list{
+    display: none;
+  }
+  .cryptos{
+    display: block;
+  }
 }

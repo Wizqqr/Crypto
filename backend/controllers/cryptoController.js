@@ -1,9 +1,16 @@
-// src/controllers/cryptoController.js
 import Crypto from '../models/Crypto.js';
 import axios from 'axios';
+import redisClient from '../config/redis.js'; 
 
 export const getAllCryptos = async (req, res) => {
     try {
+        const cachedCryptos = await redisClient.get('cryptos');
+
+        if (cachedCryptos) {
+            console.log("Fetching data from Redis...");
+            return res.json({ data: JSON.parse(cachedCryptos) }); 
+        }
+
         let cryptocurrencies = await Crypto.find();
 
         if (!cryptocurrencies.length) {
@@ -47,6 +54,10 @@ export const getAllCryptos = async (req, res) => {
             console.log("Data retrieved from the database.");
         }
 
+        await redisClient.set('cryptos', JSON.stringify(cryptocurrencies), {
+            EX: 3600
+        });
+
         res.json({ data: cryptocurrencies });
     } catch (error) {
         console.error(error);
@@ -54,10 +65,16 @@ export const getAllCryptos = async (req, res) => {
     }
 };
 
-// Fetch a single cryptocurrency by ID
 export const getCryptoById = async (req, res) => {
     const { id } = req.params;
     try {
+        const cachedCrypto = await redisClient.get(`crypto:${id}`);
+
+        if (cachedCrypto) {
+            console.log("Fetching cryptocurrency data from Redis...");
+            return res.json(JSON.parse(cachedCrypto));  
+        }
+
         let cryptocurrency = await Crypto.findOne({ id });
 
         if (!cryptocurrency) {
@@ -97,8 +114,10 @@ export const getCryptoById = async (req, res) => {
                     percent_change_90d: cryptocurrency.quote.USD.percent_change_90d
                 };
 
-                // Save the fetched cryptocurrency into the database
-                await Crypto.create(cryptoData);
+                await redisClient.set(`crypto:${id}`, JSON.stringify(cryptoData), {
+                    EX: 3600
+                });
+
                 return res.json(cryptoData);
             }
 
@@ -109,5 +128,25 @@ export const getCryptoById = async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Error fetching cryptocurrency' });
+    }
+};
+
+export const getMostExpensiveCryptos = async (req, res) => {
+    try {
+        const expensiveCryptos = await Crypto.find().sort({ price: -1 }).limit(5);
+        res.json({ data: expensiveCryptos });
+    } catch (error) {
+        console.error('Error fetching most expensive cryptocurrencies:', error);
+        res.status(500).json({ message: 'Error fetching cryptocurrencies' });
+    }
+};
+
+export const getCheapestCryptos = async (req, res) => {
+    try {
+        const cheapestCryptos = await Crypto.find().sort({ price: 1 }).limit(5);
+        res.json({ data: cheapestCryptos });
+    } catch (error) {
+        console.error('Error fetching cheapest cryptocurrencies:', error);
+        res.status(500).json({ message: 'Error fetching cryptocurrencies' });
     }
 };

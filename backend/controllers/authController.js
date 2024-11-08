@@ -2,12 +2,12 @@ import User from '../models/User.js';
 import jwt from 'jsonwebtoken';
 import transporter from '../config/nodemailer.js';
 import crypto from 'crypto';
-import bcrypt from 'bcryptjs'
+import bcrypt from 'bcryptjs';
 
 const generateToken = (user) => {
   return jwt.sign(
     { _id: user._id, email: user.email },
-    'secret123', // Use a secure secret key from your environment variables in production
+    'secret123',
     { expiresIn: '30d' }
   );
 };
@@ -16,17 +16,11 @@ export const register = async (req, res) => {
   const { fullName, email, password, avatarUrl } = req.body;
 
   try {
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: 'Email already exists' });
-    }
-
-    const confirmationCode = crypto.randomInt(100000, 999999).toString(); // Generate a 6-digit code
+    const confirmationCode = crypto.randomInt(100000, 999999).toString();
     const user = new User({ fullName, email, password, avatarUrl, confirmationCode, codeGeneratedAt: Date.now() });
 
     await user.save();
 
-    // Send the confirmation code via email
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: email,
@@ -51,7 +45,6 @@ export const verifyCode = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Check if the code is correct and not expired (e.g., valid for 10 minutes)
     const isCodeValid = user.confirmationCode === code && (Date.now() - user.codeGeneratedAt) < 10 * 60 * 1000;
 
     if (!isCodeValid) {
@@ -59,11 +52,10 @@ export const verifyCode = async (req, res) => {
     }
 
     user.isVerified = true;
-    user.confirmationCode = undefined; // Clear the confirmation code
-    user.codeGeneratedAt = undefined; // Clear the timestamp
+    user.confirmationCode = undefined;
+    user.codeGeneratedAt = undefined;
     await user.save();
 
-    // Generate JWT for the verified user
     const token = generateToken(user);
 
     res.status(200).json({ message: 'Email confirmed successfully!', token });
@@ -78,21 +70,7 @@ export const login = async (req, res) => {
 
   try {
     const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
 
-    if (!user.isVerified) {
-      return res.status(400).json({ message: 'Please verify your email first' });
-    }
-
-    // Check if the password is correct
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      return res.status(400).json({ message: 'Invalid password' });
-    }
-
-    // Generate JWT for the verified user
     const token = generateToken(user);
 
     res.status(200).json({ message: 'Login successful', token });
@@ -101,6 +79,7 @@ export const login = async (req, res) => {
     res.status(500).json({ message: 'Error logging in', error });
   }
 };
+
 
 export const getMe = async (req, res) => {
   try {
@@ -112,5 +91,69 @@ export const getMe = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Error retrieving user information', error });
+  }
+};
+
+// Forgot Password
+export const forgotPassword = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const resetCode = crypto.randomInt(100000, 999999).toString();
+
+    user.resetCode = resetCode;
+    user.resetCodeGeneratedAt = Date.now();
+
+    await user.save();
+
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: 'Password Reset Code',
+      html: `<h1>Password Reset Code</h1><p>Your password reset code is: <strong>${resetCode}</strong></p><p>This code is valid for 10 minutes.</p>`,
+    });
+
+    res.status(200).json({ message: 'Password reset code sent to your email.' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error sending reset code', error });
+  }
+};
+
+// Reset Password
+export const resetPassword = async (req, res) => {
+  const { email, resetCode, newPassword } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (user.resetCode !== resetCode) {
+      return res.status(400).json({ message: 'Invalid reset code' });
+    }
+
+    const timeLimit = 10 * 60 * 1000;
+    const isCodeExpired = Date.now() - user.resetCodeGeneratedAt > timeLimit;
+
+    if (isCodeExpired) {
+      return res.status(400).json({ message: 'Reset code has expired' });
+    }
+
+    user.password = await bcrypt.hash(newPassword, 10);
+    user.resetCode = null;
+    user.resetCodeGeneratedAt = null;
+    await user.save();
+
+    res.status(200).json({ message: 'Password successfully reset' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error resetting password' });
   }
 };

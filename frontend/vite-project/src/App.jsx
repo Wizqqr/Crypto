@@ -5,17 +5,17 @@ import CryptoDetailPage from './pages/CryptoDetailPage/CryptoDetailPage';
 import SidebarMenu from './components/Menu/Menu';
 import Header from './components/Header/Header';
 import Footer from './components/Footer/Footer';
-import Login from './pages/Login/Login';
-import Register from './pages/Register/Register';
-import ConfirmEmail from './pages/ConfirmEmail/Confirm';
+import NotFound from './pages/NotFound/NotFound';
 import './App.css';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchAuthMe } from './redux/slices/auth';
+
 const App = () => {
   const [isMenuVisible, setMenuVisible] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [username, setUsername] = useState('');
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
+
   const toggleMenu = () => {
     setMenuVisible(!isMenuVisible);
   };
@@ -52,7 +52,8 @@ const App = () => {
           isAuthenticated={isAuthenticated}
           username={username}
           handleLogout={handleLogout}
-        />
+          handleLogin={handleLogin}
+        />  
         {isMenuVisible && (
           <div className="menu">
             <SidebarMenu />
@@ -61,10 +62,12 @@ const App = () => {
         <div className="content">
           <Routes>
             <Route path="/" element={<HomePage />} />
+
+            {/* Crypto */}
             <Route path="/crypto/:id" element={<CryptoDetailPage />} />
-            <Route path="/login" element={<Login onLogin={handleLogin} />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/confirm" element={<ConfirmEmail />} />
+
+            {/* NotFound */}
+            <Route path='*' element={<NotFound/>}></Route>
             </Routes>
         </div>
         <Footer />

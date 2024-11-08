@@ -1,0 +1,68 @@
+.crypto-line-card {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 10px 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background-color: #fff;
+  transition: background-color 0.3s ease;
+}
+
+.crypto-line-card:hover {
+  background-color: #f9f9f9;
+}
+
+.crypto-line-logo {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+}
+
+.crypto-line-name {
+  font-weight: bold;
+  font-size: 1.1em;
+}
+
+.crypto-line-symbol {
+  color: #555;
+}
+
+.crypto-line-price {
+  color: #27ae60;
+  font-weight: bold;
+}
+
+.crypto-line-market-cap,
+.crypto-line-date {
+  color: #888;
+  font-size: 0.9em;
+}
+
+/* Mobile styles */
+@media (max-width: 600px) {
+  .crypto-line-card {
+    padding: 8px 10px;
+    gap: 10px;
+  }
+
+  .crypto-line-logo {
+    width: 20px;
+    height: 20px;
+  }
+
+  .crypto-line-name {
+    font-size: 0.9em;
+  }
+
+  .crypto-line-symbol,
+  .crypto-line-price {
+    font-size: 0.8em;
+  }
+
+  .crypto-line-market-cap,
+  .crypto-line-date {
+    font-size: 0.75em;
+  }
+}
