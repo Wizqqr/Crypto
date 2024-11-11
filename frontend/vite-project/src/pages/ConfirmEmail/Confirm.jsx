@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 const ConfirmEmail = () => {
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
+  const [errors, setErrors] = useState({}); // Initialize errors
 
   const handleSubmit = async (e) => {
     e.preventDefault();

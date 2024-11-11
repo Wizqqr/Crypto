@@ -67,7 +67,6 @@ const Register = () => {
         setLoading(false)
       } else {
         console.error('Error registering user:', error);
-        setLoading(false)
       }
     }
   };
@@ -129,7 +128,7 @@ const Register = () => {
           </form>
         </>
       ) : (
-        <ConfirmEmail />
+<ConfirmEmail errors={errors} />
       )}
     </div>
   );

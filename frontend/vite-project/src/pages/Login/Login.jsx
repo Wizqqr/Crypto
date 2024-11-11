@@ -69,8 +69,8 @@ const Login = ({ onLogin }) => {
           />
           {errors.password && <p className="error-text">{errors.password}</p>}
         </div>
-        <button type="submit" >
-                  {loading ? 'Sending...' : 'Login'}
+        <button type="submit" disabled={loading} >
+        {loading ? 'Sending...' : 'Login'}
       </button>      
        </form>
     </div>

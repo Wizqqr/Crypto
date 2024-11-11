@@ -15,9 +15,33 @@ const generateToken = (user) => {
 export const register = async (req, res) => {
   const { fullName, email, password, avatarUrl } = req.body;
 
+  if (password.length < 8) {
+    return res.status(400).json({ message: 'Password must be at least 8 characters long' });
+  }
+
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+  if (!passwordRegex.test(password)) {
+    return res.status(400).json({
+      message: 'Password must contain at least one uppercase letter, one lowercase letter, one number, and be at least 8 characters long',
+    });
+  }
+
+  const existingEmail = await User.findOne({ email });
+  if (existingEmail) {
+    return res.status(400).json({ message: 'Email is already in use' });
+  }
+
+  const confirmationCode = crypto.randomInt(100000, 999999).toString();
+  
   try {
-    const confirmationCode = crypto.randomInt(100000, 999999).toString();
-    const user = new User({ fullName, email, password, avatarUrl, confirmationCode, codeGeneratedAt: Date.now() });
+    const user = new User({
+      fullName,
+      email,
+      password: await bcrypt.hash(password, 10),
+      avatarUrl,
+      confirmationCode,
+      codeGeneratedAt: Date.now()
+    });
 
     await user.save();
 
@@ -32,6 +56,34 @@ export const register = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Error registering user', error });
+  }
+};
+
+export const login = async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (!user.isVerified) {
+      return res.status(400).json({ message: 'Please verify your email first' });
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(400).json({ message: 'Invalid password' });
+    }
+
+    const token = generateToken(user);
+
+    res.status(200).json({ message: 'Login successful', token });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error logging in', error });
   }
 };
 
@@ -65,22 +117,6 @@ export const verifyCode = async (req, res) => {
   }
 };
 
-export const login = async (req, res) => {
-  const { email, password } = req.body;
-
-  try {
-    const user = await User.findOne({ email });
-
-    const token = generateToken(user);
-
-    res.status(200).json({ message: 'Login successful', token });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Error logging in', error });
-  }
-};
-
-
 export const getMe = async (req, res) => {
   try {
     const user = await User.findById(req.userId).select('-password');
@@ -94,7 +130,6 @@ export const getMe = async (req, res) => {
   }
 };
 
-// Forgot Password
 export const forgotPassword = async (req, res) => {
   const { email } = req.body;
 
@@ -125,7 +160,6 @@ export const forgotPassword = async (req, res) => {
   }
 };
 
-// Reset Password
 export const resetPassword = async (req, res) => {
   const { email, resetCode, newPassword } = req.body;
 
@@ -146,7 +180,7 @@ export const resetPassword = async (req, res) => {
       return res.status(400).json({ message: 'Reset code has expired' });
     }
 
-    user.password = await bcrypt.hash(newPassword, 10);
+    user.password = newPassword
     user.resetCode = null;
     user.resetCodeGeneratedAt = null;
     await user.save();

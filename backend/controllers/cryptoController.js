@@ -1,20 +1,19 @@
 import Crypto from '../models/Crypto.js';
 import axios from 'axios';
-import redisClient from '../config/redis.js'; 
+import mongoose from 'mongoose';
 
 export const getAllCryptos = async (req, res) => {
     try {
-        const cachedCryptos = await redisClient.get('cryptos');
-
-        if (cachedCryptos) {
-            console.log("Fetching data from Redis...");
-            return res.json({ data: JSON.parse(cachedCryptos) }); 
-        }
-
         let cryptocurrencies = await Crypto.find();
 
-        if (!cryptocurrencies.length) {
+        const needsUpdate = !cryptocurrencies.length || 
+        (Date.now() - new Date(cryptocurrencies[0].lastUpdated).getTime()) > 1 * 60 * 1000; // 24 hours
+
+
+
+        if (needsUpdate) {
             console.log("Fetching data from API...");
+
             const apiKey = process.env.COINMARKETCAP_API_KEY;
             const response = await axios.get("https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest", {
                 headers: { 'X-CMC_PRO_API_KEY': apiKey }
@@ -45,18 +44,16 @@ export const getAllCryptos = async (req, res) => {
                 percent_change_7d: crypto.quote.USD.percent_change_7d,
                 percent_change_30d: crypto.quote.USD.percent_change_30d,
                 percent_change_60d: crypto.quote.USD.percent_change_60d,
-                percent_change_90d: crypto.quote.USD.percent_change_90d
+                percent_change_90d: crypto.quote.USD.percent_change_90d,
+                lastUpdated: new Date() 
             }));
 
+            await Crypto.deleteMany({});
             await Crypto.insertMany(cryptocurrencies);
-            console.log("Data saved to the database.");
+            console.log("Data updated and saved to the database.");
         } else {
-            console.log("Data retrieved from the database.");
+            console.log("Using cached data from the database.");
         }
-
-        await redisClient.set('cryptos', JSON.stringify(cryptocurrencies), {
-            EX: 3600
-        });
 
         res.json({ data: cryptocurrencies });
     } catch (error) {
@@ -68,56 +65,47 @@ export const getAllCryptos = async (req, res) => {
 export const getCryptoById = async (req, res) => {
     const { id } = req.params;
     try {
-        const cachedCrypto = await redisClient.get(`crypto:${id}`);
-
-        if (cachedCrypto) {
-            console.log("Fetching cryptocurrency data from Redis...");
-            return res.json(JSON.parse(cachedCrypto));  
-        }
-
         let cryptocurrency = await Crypto.findOne({ id });
 
-        if (!cryptocurrency) {
+        if (!cryptocurrency || (Date.now() - new Date(cryptocurrency.lastUpdated).getTime()) > 24 * 60 * 60 * 1000) {
             console.log("Fetching cryptocurrency from API...");
             const apiKey = process.env.COINMARKETCAP_API_KEY;
             const response = await axios.get(`https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?id=${id}`, {
                 headers: { 'X-CMC_PRO_API_KEY': apiKey }
             });
-            cryptocurrency = response.data.data[id];
-
-            if (cryptocurrency) {
+            const apiData = response.data.data[id];
+        
+            if (apiData) {
                 const cryptoData = {
-                    id: cryptocurrency.id,
-                    name: cryptocurrency.name,
-                    symbol: cryptocurrency.symbol,
-                    slug: cryptocurrency.slug,
-                    logo: `https://s2.coinmarketcap.com/static/img/coins/64x64/${cryptocurrency.id}.png`,
-                    description: cryptocurrency.description || '',
-                    date_added: cryptocurrency.date_added,
-                    tags: cryptocurrency.tags,
-                    max_supply: cryptocurrency.max_supply || null,
-                    circulating_supply: cryptocurrency.circulating_supply,
-                    total_supply: cryptocurrency.total_supply,
-                    cmc_rank: cryptocurrency.cmc_rank,
-                    last_updated: cryptocurrency.quote.USD.last_updated,
-                    price: cryptocurrency.quote.USD.price,
-                    volume_24h: cryptocurrency.quote.USD.volume_24h,
-                    volume_change_24h: cryptocurrency.quote.USD.volume_change_24h,
-                    market_cap: cryptocurrency.quote.USD.market_cap,
-                    market_cap_dominance: cryptocurrency.quote.USD.market_cap_dominance,
-                    fully_diluted_market_cap: cryptocurrency.quote.USD.fully_diluted_market_cap,
-                    percent_change_1h: cryptocurrency.quote.USD.percent_change_1h,
-                    percent_change_24h: cryptocurrency.quote.USD.percent_change_24h,
-                    percent_change_7d: cryptocurrency.quote.USD.percent_change_7d,
-                    percent_change_30d: cryptocurrency.quote.USD.percent_change_30d,
-                    percent_change_60d: cryptocurrency.quote.USD.percent_change_60d,
-                    percent_change_90d: cryptocurrency.quote.USD.percent_change_90d
+                    id: apiData.id,
+                    name: apiData.name,
+                    symbol: apiData.symbol,
+                    slug: apiData.slug,
+                    logo: `https://s2.coinmarketcap.com/static/img/coins/64x64/${apiData.id}.png`,
+                    description: apiData.description || '',
+                    date_added: apiData.date_added,
+                    tags: apiData.tags,
+                    max_supply: apiData.max_supply || null,
+                    circulating_supply: apiData.circulating_supply,
+                    total_supply: apiData.total_supply,
+                    cmc_rank: apiData.cmc_rank,
+                    last_updated: apiData.quote.USD.last_updated,
+                    price: apiData.quote.USD.price,
+                    volume_24h: apiData.quote.USD.volume_24h,
+                    volume_change_24h: apiData.quote.USD.volume_change_24h,
+                    market_cap: apiData.quote.USD.market_cap,
+                    market_cap_dominance: apiData.quote.USD.market_cap_dominance,
+                    fully_diluted_market_cap: apiData.quote.USD.fully_diluted_market_cap,
+                    percent_change_1h: apiData.quote.USD.percent_change_1h,
+                    percent_change_24h: apiData.quote.USD.percent_change_24h,
+                    percent_change_7d: apiData.quote.USD.percent_change_7d,
+                    percent_change_30d: apiData.quote.USD.percent_change_30d,
+                    percent_change_60d: apiData.quote.USD.percent_change_60d,
+                    percent_change_90d: apiData.quote.USD.percent_change_90d,
+                    lastUpdated: new Date() 
                 };
 
-                await redisClient.set(`crypto:${id}`, JSON.stringify(cryptoData), {
-                    EX: 3600
-                });
-
+                await Crypto.findOneAndUpdate({ id: cryptoData.id }, cryptoData, { upsert: true });
                 return res.json(cryptoData);
             }
 
@@ -130,7 +118,6 @@ export const getCryptoById = async (req, res) => {
         res.status(500).json({ message: 'Error fetching cryptocurrency' });
     }
 };
-
 export const getMostExpensiveCryptos = async (req, res) => {
     try {
         const expensiveCryptos = await Crypto.find().sort({ price: -1 }).limit(5);
@@ -150,3 +137,4 @@ export const getCheapestCryptos = async (req, res) => {
         res.status(500).json({ message: 'Error fetching cryptocurrencies' });
     }
 };
+

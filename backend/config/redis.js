@@ -1,10 +1,10 @@
-import { createClient } from 'redis';
+// import { createClient } from 'redis';
 
-const redisClient = createClient();
+// const redisClient = createClient();
 
-redisClient.on('error', (err) => {
-    console.error("Redis client error", err);
-});
+// redisClient.on('error', (err) => {
+//     console.error("Redis client error", err);
+// });
 
 
-export default redisClient;
+// export default redisClient;

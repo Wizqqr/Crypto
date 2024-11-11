@@ -1,4 +1,3 @@
-// src/models/Crypto.js
 import mongoose from 'mongoose';
 
 const cryptoSchema = new mongoose.Schema({
@@ -26,9 +25,11 @@ const cryptoSchema = new mongoose.Schema({
     percent_change_7d: { type: Number, default: null },
     percent_change_30d: { type: Number, default: null },
     percent_change_60d: { type: Number, default: null },
-    percent_change_90d: { type: Number, default: null }
+    percent_change_90d: { type: Number, default: null },
+    data_last_fetched: { type: Date, default: null },
+    lastUpdated: { type: Date, default: Date.now }
+
 });
 
 const Crypto = mongoose.model('Crypto', cryptoSchema);
 export default Crypto;
-    
